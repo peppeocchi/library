@@ -11,6 +11,34 @@
 |
 */
 
+Route::get('/install', function()
+{
+	$data = array();
+	try {
+		$db = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'library'");
+		if(count($db)) {
+		} else {
+			$data['error'] = 'The database does not exists';
+		}
+	} catch(Exception $e) {
+		$dbName = Config::get('database')['connections']['mysql']['database'];
+		switch ($e->getCode()) {
+			case 1045:
+				$data['error'] = 'Please check your database config file. Wrong username or password.';
+				break;
+			
+			case 1049;
+				$data['error'] = "The database `{$dbName}` does not exists.<br>Please create the database `{$dbName}`, then reload this page.";
+				break;
+
+			default:
+				$data['error'] = 'Unknown error code. Messge: ' . $e->getMessage() . ' - Code: ' . $e->getCode();
+				break;
+		}
+	}
+	return View::make('install.index')->with('data', $data);
+});
+
 Route::get('/', function()
 {
 	return View::make('index');
